@@ -7,7 +7,7 @@ import (
 )
 
 func ProvideServer() *gin.Server {
-	return &gin.Server{
+	s := &gin.Server{
 		Engine:      actualGin.Default(),
 		Port:        providePort(),
 		PingHandler: gin.PingHandler{},
@@ -15,6 +15,10 @@ func ProvideServer() *gin.Server {
 			UseCase: provideGetItemByIDHandler(),
 		},
 	}
+
+	s.MapRoutesToHandlers()
+
+	return s
 }
 
 func providePort() string {
