@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func ErrorMiddleware() gin.HandlerFunc {
+func errorMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.Next()
 
