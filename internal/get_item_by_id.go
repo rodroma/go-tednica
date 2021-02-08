@@ -2,7 +2,7 @@ package internal
 
 import (
 	"context"
-	"sync"
+	"golang.org/x/sync/errgroup"
 )
 
 type GetItemByIDResponse struct {
@@ -20,41 +20,27 @@ type GetItemByID struct{
 }
 
 func (uc GetItemByID) GetItemByID(ctx context.Context, id string) (GetItemByIDResponse, error) {
-	ctx, cancelFunc := context.WithCancel(ctx)
-	defer cancelFunc()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	var err error
+	g, ctx := errgroup.WithContext(ctx)
 
 	var item Item
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
+	g.Go(func() error {
+		var err error
 		item, err = uc.ItemGetter.GetItem(ctx, id)
-
-		if err != nil {
-			cancelFunc()
-		}
-	}(&wg)
+		return err
+	})
 
 	var salePrice *SalePrice
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-
+	g.Go(func() error {
 		sp, err := uc.SalePriceGetter.GetSalePrice(ctx, id)
-
 		if err != nil {
-			// Do stuff, log maybe?
-			return
+			// Log or do some thing
+		} else {
+			salePrice = &sp
 		}
+		return nil
+	})
 
-		salePrice = &sp
-	}(&wg)
-
-	wg.Wait()
-
-	if err != nil {
+	if err := g.Wait(); err != nil {
 		return GetItemByIDResponse{}, err
 	}
 
