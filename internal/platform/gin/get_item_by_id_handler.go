@@ -16,13 +16,7 @@ type GetItemByIDHandler struct {
 	}
 }
 
-func (h GetItemByIDHandler) GetItemByID(ctx *gin.Context) {
-	if err := h.getItemByID(ctx); err != nil {
-		_ = ctx.Error(err)
-	}
-}
-
-func (h GetItemByIDHandler) getItemByID(ctx *gin.Context) error {
+func (h GetItemByIDHandler) GetItemByID(ctx *gin.Context) error {
 	id := ctx.Param("id")
 	if err := h.validateID(id); err != nil {
 		return err
