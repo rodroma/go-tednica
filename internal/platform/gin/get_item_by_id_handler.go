@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-tednica/internal"
+	"go-tednica/internal/commonerrors"
 	"net/http"
 	"regexp"
 )
@@ -16,26 +17,32 @@ type GetItemByIDHandler struct {
 }
 
 func (h GetItemByIDHandler) GetItemByID(ctx *gin.Context) {
+	if err := h.getItemByID(ctx); err != nil {
+		_ = ctx.Error(err)
+	}
+}
+
+func (h GetItemByIDHandler) getItemByID(ctx *gin.Context) error {
 	id := ctx.Param("id")
 	if err := h.validateID(id); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, nil)
-		return
+		return err
 	}
 
 	response, err := h.UseCase.GetItemByID(ctx.Request.Context(), id)
 
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, nil)
-		return
+		return err
 	}
 
 	ctx.JSON(http.StatusOK, h.mapResponseToJSON(response))
+
+	return nil
 }
 
 var itemIDRegex = regexp.MustCompile(`ML[A-Z]\d+`)
 func (h GetItemByIDHandler) validateID(id string) error {
 	if !itemIDRegex.MatchString(id) {
-		return fmt.Errorf("invalid item id %s", id)
+		return commonerrors.BadArgument(fmt.Errorf("invalid item id %s", id))
 	}
 	return nil
 }
